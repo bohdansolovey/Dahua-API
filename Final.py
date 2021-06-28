@@ -6,75 +6,70 @@ import ipaddress
 from colorama import init
 from colorama import Fore, Back, Style
 
-init(convert=True)  # Для краси виводу
-"""
-Клас для налаштувань, потрібно створити екземпляр, передати в нього параметри  
-
-"""
+init(convert=True) 
 
 
 class CameraSettings(object):
 
     def __init__(self, login, timo, resolutionextra, bitextra, encodeextra, extraFPS, resolution, bitrate, encodemain,mainFPS):
-        self.ip_rang = self.ip_chek()  # Список з Ip отримується з функції
-        self.login = login  # логін для входу
-        self.resolutionextra = resolutionextra  # роздільна здатність для додаткового
-        self.bitextra = bitextra  # бітрейт на додаткове відео
-        self.s1 = requests.Session()  # сесія
-        self.timo = timo  # тайм-аут  на  запит
-        self.resolution = resolution  # роздільна здатність основго потоку
-        self.bitrate = bitrate  # для основного
-        self.encodeextra = encodeextra  # Baseline =H.264B, Extended = H264. High=H264.H, Main для H264
-        self.encodemain = encodemain  # Baseline =H.264B, Extended = H264 High=H264.H, Main для H264
+        self.ip_rang = self.ip_chek()  # list of IPs
+        self.login = login 
+        self.resolutionextra = resolutionextra  #resolutionextra for additional
+        self.bitextra = bitextra  # bitrate for additional
+        self.s1 = requests.Session()  # http session
+        self.timo = timo  # time-out
+        self.resolution = resolution  # main resolution
+        self.bitrate = bitrate  # main bitrate
+        self.encodeextra = encodeextra  # Baseline =H.264B, Extended = H264. High=H264.H, Main for H264
+        self.encodemain = encodemain  # Baseline =H.264B, Extended = H264 High=H264.H, Main for H264
         self.mainFPS = mainFPS
         self.extraFPS = extraFPS
-        self.password = input('Введіть пароль до користувача admin:')
-        self.newadminpass = input('Введіть новий пароль адміністратора(enter щоб пропустити)')
+        self.password = input('Enter pass for admin:')
+        self.newadminpass = input('Enter new pass for admin(enter to skip)')
         if self.newadminpass == '':
             self.newadminpass = self.password
-        self.new_user = input("Введіть ім'я нового користувача(enter щоб пропустити):")
+        self.new_user = input("Enter username for new user(enter to skip):")
         if self.new_user != '':
-            self.newuserpass = input("Введіть пароль до нового користувача")
+            self.newuserpass = input("Pass for new user")
         else:
             self.newuserpass = ''
-        self.err_list = []  # для списку помилок
-        self.interface = "eth0"  # інтерфейс під dhcp
-        self.smart_encode = 'true'  # 'false' якщо вимкнути
+        self.err_list = [] 
+        self.interface = "eth0"  # network interface for dhcp
+        self.smart_encode = 'true'
         # self.encodeextra = 'Main'  # Baseline =H.264B, Extended = H264. High=H264.H, Main для H264
         # self.encodemain = 'High'  # Baseline =H.264B, Extended = H264 High=H264.H, Main для H264
 
     def reschek(self, ip):
         if (self.bitrate < 384) or (self.bitrate > 8192):
-            self.err_list.append((str(ip) + ' Недопустимий бітрейт, змінено на найближче значення'))
+            self.err_list.append((str(ip) + ' Invalid bitrate, changed to closest val'))
             return
-        # в наступну йдуть всі з 364-10240
+        # next range is: 364-10240
         else:
             if self.bitrate > 7168 and self.resolution == "1280x720":
-                self.err_list.append((str(ip) + ' Недопустимий бітрейт, змінено на найближче значення(7168)'))
+                self.err_list.append((str(ip) + ' Invalid bitrate, changed to closest val(7168)'))
                 return
-            # тут варіанти
             elif self.bitrate < 1280:
                 if (self.resolution == '1280x960' or self.resolution == '1280x1024') and self.bitrate < 512:
-                    self.err_list.append((str(ip) + ' Недопустимий бітрейт, змінено на найближче значення(512)'))
+                    self.err_list.append((str(ip) + ' Invalid bitrate, changed to closest val(512)'))
                     return
                 if (self.resolution == '1920x1080') and self.bitrate < 896:
-                    self.err_list.append((str(ip) + ' Недопустимий бітрейт, змінено на найближче значення(896)'))
+                    self.err_list.append((str(ip) + ' Invalid bitrate, changed to closest val(896)'))
                     return
                 if (self.resolution == '2304x1296') or (self.resolution == '2048x1536'):
-                    self.err_list.append((str(ip) + ' Недопустимий бітрейт, змінено на найближче значення(1280)'))
+                    self.err_list.append((str(ip) + ' Invalid bitrate, changed to closest val(1280)'))
                     return
         if self.bitextra < 20 or self.bitextra > 1536:
             self.err_list.append(
-                (str(ip) + ' Недопустимий бітрейт для додаткового потоку, змінено на найближче значення'))
+                (str(ip) + ' Invalid bitrate for additional stream, changed to closest val'))
         elif self.resolutionextra == '352x288' and self.bitextra > 384:
             self.err_list.append(
-                (str(ip) + ' Недопустимий бітрейт для додаткового потоку, змінено на найближче значення(384)'))
+                (str(ip) + ' Invalid bitrate for additional stream, changed to closest val(384)'))
         elif self.resolutionextra == '704x576' and self.bitextra < 80:
             self.err_list.append(
-                (str(ip) + ' Недопустимий бітрейт для додаткового потоку, змінено на найближче значення(80)'))
+                (str(ip) + ' Invalid bitrate for additional stream, changed to closest val(80)'))
         elif self.resolutionextra == '640x480' and self.bitextra > 384:
             self.err_list.append(
-                (str(ip) + ' Недопустимий бітрейт для додаткового потоку, змінено на найближче значення1024)'))
+                (str(ip) + ' Invalid bitrate for additional stream, changed to closest val(1024)'))
 
     def check_ses(self, ip):
         try:
@@ -82,11 +77,11 @@ class CameraSettings(object):
             # session.auth = HTTPDigestAuth(login, password)
             r1 = self.s1.get('http://{ip}/cgi-bin/encode.cgi?action=getConfigCaps'.format(ip=ip), timeout=self.timo)
 
-            # якшо помилка то перша буква буде Е =)
+            # first letter is always Е if this is err =)
             if r1.status_code == 200:
                 exp = r1.text
                 if exp[0] == "E":
-                    self.err_list.append(str(ip) + ' Не вдалося встановити зєднання')
+                    self.err_list.append(str(ip) + ' Cant connect')
                     return False
             elif (r1.status_code != 200):
                 self.s1.auth = HTTPBasicAuth(self.login, self.password)
@@ -94,18 +89,19 @@ class CameraSettings(object):
                 if r1.status_code == 200:
                     exp = r1.text
                     if exp[0] == "E":
-                        self.err_list.append(str(ip) + ' Не вдалося встановити зєднання')
+                        self.err_list.append(str(ip) + ' Cant connect')
                         return False
                 elif r1.status_code != 200:
-                    self.err_list.append(str(ip) + ' Не вдалося встановити зєднання')
+                    self.err_list.append(str(ip) + ' Cant connect')
                     return False
 
         except requests.exceptions.RequestException:
-            self.err_list.append(str(ip) + ' Не вдалося встановити зєднання')
+            self.err_list.append(str(ip) + ' Cant connect')
             return False
 
-    # додати юзера, з перевіркою
+    
     def user_new(self, ip):
+        """add user with check"""
         r1 = self.s1.post(
             'http://{ip}/cgi-bin/userManager.cgi?action=addUser&user.Reserved=false&user.Sharable=true&user.Name={new_user}&user.Password={newuserpass}&user.Group=user'
                 .format(ip=ip,
@@ -115,18 +111,18 @@ class CameraSettings(object):
 
         exp = str(r1.text)
         if exp[0] == 'E':
-            self.err_list.append(str(ip) + ' Не вдалося додати користувача')
+            self.err_list.append(str(ip) + ' Can not add user')
         else:
-            print(ip, ' Cтворення користувача - OK')
+            print(ip, ' Success')
 
     def rebootfunk(self, ip):
         newpass = self.newadminpass
-        self.s1 = requests.Session()  # сесія
+        self.s1 = requests.Session()
         self.s1.auth = HTTPDigestAuth(self.login, newpass)
         r = self.s1.get('http://{ip}/cgi-bin/magicBox.cgi?action=reboot'.format(ip=ip))
         exp = r.text
         if r.status_code == 200 and exp[0] == "E":
-            self.err_list.append(str(ip) + ' Не вдалося встановити зєднання при перезавантаженні')
+            self.err_list.append(str(ip) + ' Couldnt connect after reboot')
             return False
 
         elif r.status_code != 200:
@@ -134,14 +130,14 @@ class CameraSettings(object):
             r = self.s1.get('http://{ip}/cgi-bin/magicBox.cgi?action=reboot'.format(ip=ip))
             exp = r.text
             if r.status_code == 200 and exp[0] == "E":
-                self.err_list.append(str(ip) + ' Не вдалося встановити зєднання')
+                self.err_list.append(str(ip) + ' Cant connect')
                 return False
         else:
-            print(ip, 'Перезавантажено - OK')
+            print(ip, 'Restarted - OK')
 
     # rebootfunk()
 
-    # тут ставимо параметри всі+ 20фпс+ передаємо формат\бітрейт
+    # 20 fps + pass format \ bitrate
     def video_parm(self, ip):
         r1 = self.s1.post(
             'http://{ip}/cgi-bin/configManager.cgi?action=setConfig&Encode[0].MainFormat[0].Video.BitRate={'
@@ -154,13 +150,13 @@ class CameraSettings(object):
                 encodemain=self.encodemain,
                 mainFPS=self.mainFPS))
         exp = r1.text
-        # якшо помилка то перша буква буде Е =)
+       
         if exp[0] == "E":
             self.videoparamsextra(ip)
-            self.err_list.append((str(ip) + ' Не вдалося змінити роздільну здатність(основний)'))
+            self.err_list.append((str(ip) + ' Couldnt change main resolution'))
         else:
-            print(ip, ' Налаштування основного потоку виконано з статусом', '-',
-                  'OK') if r1.status_code == 200 else self.err_list.append((str(ip) + ' Основний потік не налаштовано'))
+            print(ip, ' settings for main stream changed with status', '-',
+                  'OK') if r1.status_code == 200 else self.err_list.append((str(ip) + ' Main stream not configured'))
 
         r2 = self.s1.post(
             'http://{ip}/cgi-bin/configManager.cgi?action=setConfig&Encode[0].ExtraFormat[0].Video.resolution={'
@@ -174,12 +170,12 @@ class CameraSettings(object):
                 extraFPS=self.extraFPS,
                 gopextra=self.extraFPS*2))
         exp = r2.text
-        # якшо помилка то перша буква буде Е =)
+
         if exp[0] == "E":
-            self.err_list.append((str(ip) + ' Не вдалося змінити роздільну здатність(додатковий)'))
+            self.err_list.append((str(ip) + ' couldnt change resol'))
         else:
-            print(ip, ' Налаштування додаткового потоку', '-', 'OK') if r2.status_code == 200 else self.err_list.append(
-                (str(ip) + ' Додатковий потік не налаштовано'))
+            print(ip, ' configure additional stream', '-', 'OK') if r2.status_code == 200 else self.err_list.append(
+                (str(ip) + ' additional stream not configured'))
 
     # video_parm()
 
@@ -190,14 +186,15 @@ class CameraSettings(object):
                 ip=ip))
         exp = r1.text
         if exp[0] == "E":
-            self.err_list.append(str(ip) + ' Не вдалося налаштувати DHCP')
+            self.err_list.append(str(ip) + ' not configured DHCP')
             return False
         else:
             print(ip, 'Налаштування DHCP', '-',
-                  'OK' if r1.status_code == 200 else self.err_list.append((str(ip) + 'Помилка з DHCP')))
+                  'OK' if r1.status_code == 200 else self.err_list.append((str(ip) + 'err with DHCP')))
 
-    # дефолтний пароль міняється на заданий
+    
     def admin_start(self, ip):
+        """change default pass"""
         if self.newadminpass == self.password:
             print(ip, 'Зміна даних для входу ', '-', 'OK')
             return
